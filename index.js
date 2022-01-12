@@ -25,10 +25,22 @@ async function run(){
           const database = client.db('book_Store');
           const bookedCollection = database.collection('booked');
 
+          //Post learner Booked books
           app.post('/booked', async(req, res)=>{
                const booked = req.body;
                const result = await bookedCollection.insertOne(booked)
-               console.log(result)
+               // console.log(result)
+               res.json(result)
+          })
+
+          //Get learner Booked books
+          app.get('/booked', async(req, res)=>{
+               const email = req.query.email;
+               const date= new Date(req.query.date).toLocaleDateString();
+               console.log(date);
+               const query = {email: email, date: date};
+               const cursor = bookedCollection.find(query);
+               const result = await cursor.toArray();
                res.json(result)
           })
 
