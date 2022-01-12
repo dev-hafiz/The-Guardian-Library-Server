@@ -20,10 +20,18 @@ async function run(){
      try{
 
           await client.connect();
-          // console.log('Database Connect successfully');
+          console.log('Database Connect successfully');
           //Create database and collections
           const database = client.db('book_Store');
-          const books = database.collection('books');
+          const bookedCollection = database.collection('booked');
+
+          app.post('/booked', async(req, res)=>{
+               const booked = req.body;
+               const result = await bookedCollection.insertOne(booked)
+               console.log(result)
+               res.json(result)
+          })
+
 
 
      }finally{
