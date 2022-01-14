@@ -48,12 +48,38 @@ async function run(){
           //User Collection Users Store
           app.post('/users', async(req, res)=>{
                const user = req.body;
-               console.log(user);
+               // console.log(user);
                const result = await usersCollection.insertOne(user)
                res.json(result)
           })
           //Put method for google sign stroe user
           app.put('/users', async(req, res)=>{
+               const user = req.body;
+               const filter = {email : user.email}
+               const options = {upsert: true}
+               const updateDoc={$set: user}
+               const result = await usersCollection.updateOne(filter, updateDoc, options)
+               res.json(result)
+          })
+          //Set/Make Admin role to general user
+          app.put('/users/admin', async(req, res)=>{
+               const user = req.body;
+               const filter = {email: user.email}
+               const updateDoc = { $set: {role:'admin'}}
+               const result = await usersCollection.updateOne(filter, updateDoc)
+               res.json(result)
+
+          })
+          //Check Admin or Not
+          app.get('/users/:email', async(req, res)=>{
+               const email = req.params.email;
+               const query = {email : email};
+               const user = await usersCollection.findOne(query);
+               let isAdmin = false;
+               if(user?.role === 'admin'){
+                    isAdmin = true;
+               }
+               res.json({ admin: isAdmin })
 
           })
 
