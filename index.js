@@ -23,7 +23,8 @@ async function run(){
           console.log('Database Connect successfully');
           //Create database and collections
           const database = client.db('book_Store');
-          const bookedCollection = database.collection('booked');
+          const bookedCollection = database.collection('booked')
+          const usersCollection = database.collection('users')
 
           //Post learner Booked books
           app.post('/booked', async(req, res)=>{
@@ -37,11 +38,23 @@ async function run(){
           app.get('/booked', async(req, res)=>{
                const email = req.query.email;
                const date= new Date(req.query.date).toLocaleDateString();
-               console.log(date);
+               
                const query = {email: email, date: date};
                const cursor = bookedCollection.find(query);
                const result = await cursor.toArray();
                res.json(result)
+          })
+
+          //User Collection Users Store
+          app.post('/users', async(req, res)=>{
+               const user = req.body;
+               console.log(user);
+               const result = await usersCollection.insertOne(user)
+               res.json(result)
+          })
+          //Put method for google sign stroe user
+          app.put('/users', async(req, res)=>{
+
           })
 
 
