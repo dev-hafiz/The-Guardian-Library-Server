@@ -1,6 +1,7 @@
 const express = require('express')
 const { MongoClient } = require('mongodb');
 const admin = require("firebase-admin");
+const ObjectId = require('mongodb').ObjectId;
 const app = express()
 let cors = require('cors')
 require('dotenv').config()
@@ -11,7 +12,7 @@ app.use(cors());
 
 
 
-const serviceAccount = require('./okshilibrary-firebase-adminsdk.json');
+const serviceAccount = './okshilibrary-firebase-adminsdk.json';
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -22,6 +23,7 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
+//VerfiToke JWT
 async function verifyToken (req, res, next){
 
      if(req.headers?.authorization?.startsWith('Bearer ')){
@@ -49,8 +51,31 @@ async function run(){
           console.log('Database Connect successfully');
           //Create database and collections
           const database = client.db('book_Store');
+          const libraryBookCollection = database.collection('libraryBook')
           const bookedCollection = database.collection('booked')
           const usersCollection = database.collection('users')
+
+
+          //get all books from liberies collection
+          app.get('/libraryBook', async(req, res)=>{
+               const cursor = libraryBookCollection.find({});
+               const results = await cursor.toArray()
+               res.send(results);
+          });
+          //Post Books collections
+          app.post('/libraryBook', async(req, res)=>{
+               const addBooks = req.body;
+               const result = await libraryBookCollection.insertOne(addBooks);
+               res.json(result)
+          })
+
+          //GET APPI DATA WITH ID
+          app.get('/libraryBook/:id', async(req, res)=>{
+               const id = req.params.id;
+               const query = {_id: ObjectId(id)}
+               const result = await libraryBookCollection.findOne(query)
+               res.json(result)
+          })
 
           //Post learner Booked books
           app.post('/booked', async(req, res)=>{
@@ -61,7 +86,7 @@ async function run(){
           })
 
           //Get learner Booked books
-          app.get('/booked', async(req, res)=>{
+          app.get('/booked', verifyToken, async(req, res)=>{
                const email = req.query.email;
                const date= new Date(req.query.date).toLocaleDateString();
                
@@ -70,6 +95,31 @@ async function run(){
                const result = await cursor.toArray();
                res.json(result)
           })
+
+           //GET SINGLE booked With id
+           app.get('/booked/:id', async(req, res)=>{
+               const id = req.params.id;
+               const query = { _id: ObjectId(id)}
+               const result = await bookedCollection.findOne(query)
+               res.json(result)
+               })
+          
+           //Delete api
+           app.delete('/booked/:id', async(req, res)=>{
+               const id = req.params.id;
+               console.log(id);
+               const query = { _id: ObjectId(id)};
+               const result = await bookedCollection.deleteOne(query)
+               res.json(result)
+          })
+          //Get all boked for manage
+          app.get('/bookedManage', async(req, res)=>{
+               const cursor =  bookedCollection.find({});
+               const results = await cursor.toArray()
+               res.send(results);
+          });
+
+         
 
           //User Collection Users Store
           app.post('/users', async(req, res)=>{
